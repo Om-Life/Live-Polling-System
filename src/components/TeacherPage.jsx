@@ -1,14 +1,21 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { sessionAPI, pollAPI } from "../utils/api";
 import { FaCaretDown } from "react-icons/fa";
 import BadgeStar from "./BadgeStar";
 
 const TeacherPage = () => {
+  const navigate = useNavigate();
+  const { user, session, setSession } = useAuth();
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState([
     { value: "", isCorrect: false },
     { value: "", isCorrect: false },
   ]);
   const [duration, setDuration] = useState("60");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleOptionChange = (index, newValue) => {
     const updated = [...options];
@@ -25,6 +32,45 @@ const TeacherPage = () => {
   const addOption = () => {
     if (options.length < 5) {
       setOptions([...options, { value: "", isCorrect: false }]);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!question.trim()) {
+      setError("Please enter a question");
+      return;
+    }
+
+    const validOptions = options.filter(opt => opt.value.trim());
+    if (validOptions.length < 2) {
+      setError("Please provide at least 2 options");
+      return;
+    }
+
+    const correctOption = options.find(opt => opt.isCorrect);
+    if (!correctOption) {
+      setError("Please mark one option as correct");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const pollData = {
+        question: question.trim(),
+        options: validOptions.map(opt => opt.value.trim()),
+        correctAnswer: correctOption.value.trim(),
+        duration: parseInt(duration)
+      };
+
+      await pollAPI.create(pollData);
+      navigate('/tque');
+    } catch (error) {
+      console.error('Create poll error:', error);
+      setError(error.response?.data?.error || 'Failed to create poll');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,6 +94,12 @@ const TeacherPage = () => {
         </div>
 
         {/* Question Input */}
+        {error && (
+          <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md mb-4">
+            {error}
+          </div>
+        )}
+        
         <div className="space-y-2 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <label className="font-semibold text-black">
@@ -139,8 +191,12 @@ const TeacherPage = () => {
       <hr className="w-full border-gray-200 my-10" />
       <div className="w-full max-w-3xl">
         <div className="flex justify-end">
-          <button className="px-6 py-3 bg-gradient-to-r from-[#8F64E1] to-[#1D68BD] text-white font-semibold rounded-full hover:opacity-90 transition">
-            Ask Question
+          <button 
+            onClick={handleSubmit}
+            disabled={loading}
+            className="px-6 py-3 bg-gradient-to-r from-[#8F64E1] to-[#1D68BD] text-white font-semibold rounded-full hover:opacity-90 transition disabled:opacity-50"
+          >
+            {loading ? 'Creating...' : 'Ask Question'}
           </button>
         </div>
       </div>
