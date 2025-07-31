@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import PollOption from "./PollOption";
 import eye from "../assets/eye.png";
+import { useNavigate } from "react-router-dom";
 
 const TeacherQuePage = () => {
+  const navigate = useNavigate();
   // Initial poll data
   const [pollData, setPollData] = useState([
     { id: 1, text: "Mars", votes: 12 },
@@ -49,7 +51,10 @@ const TeacherQuePage = () => {
 
         {/* Ask new question button */}
         <div className="flex justify-end mb-6 mt-8 gap-4">
-          <button className="flex items-center gap-2 cursor-pointer bg-gradient-to-r from-[#8F64E1] to-[#1D68BD] text-white text-sm font-medium px-5 py-3 rounded-full shadow">
+          <button
+            onClick={navigate("./teacher")}
+            className="flex items-center gap-2 cursor-pointer bg-gradient-to-r from-[#8F64E1] to-[#1D68BD] text-white text-sm font-medium px-5 py-3 rounded-full shadow"
+          >
             + Ask new question
           </button>
         </div>
